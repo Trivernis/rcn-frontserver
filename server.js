@@ -7,50 +7,53 @@ const https = require('https'),
   winston = require('winston'),
   DailyRotateFile = require('winston-daily-rotate-file'),
 // args
-  args = require('args-parser')(process.argv),
+  args = require('args-parser')(process.argv), // create an args parser
 // ressources
-  defaultCss = "/glob/style.css",
-  defaultJs = "/glob/script.js",
+  defaultCss = "/glob/style.css", // the default style that is embedded in every html
+  defaultJs = "/glob/script.js", // the default script that is embedded in every html
+// config file
+  config = JSON.parse(fs.readFileSync("config.json")),
 // logging config using winston
   fileLoggingFormat = winston.format.printf(info => {
-    return `${info.timestamp} ${info.level.toUpperCase()}: ${JSON.stringify(info.message)}`;
-  });
+    return `${info.timestamp} ${info.level.toUpperCase()}: ${JSON.stringify(info.message)}`; // the logging format for files
+  }),
   consoleLoggingFormat = winston.format.printf(info => {
-    return `${info.timestamp} [${info.level}] ${JSON.stringify(info.message)}`;
-  });
+    return `${info.timestamp} [${info.level}] ${JSON.stringify(info.message)}`; //the logging format for the console
+  }),
   loggingFullFormat = winston.format.combine(
     winston.format.splat(),
     winston.format.timestamp({
-      format: 'MM-DD HH:mm:ss.SSS'
+      format: 'MM-DD HH:mm:ss.SSS' // don't include the year because the filename already tells
     }),
-    fileLoggingFormat
+    fileLoggingFormat // the logging format for files that logs with a capitalized level
   ),
   logger = winston.createLogger({
-    level: winston.config.npm.levels,
-    format: loggingFullFormat,
+    level: winston.config.npm.levels, // logs with npm levels
+    format: loggingFullFormat, // the full format for files
     transports: [
       new winston.transports.Console({
         format: winston.format.combine(
-          winston.format.colorize(),
+          winston.format.colorize(), // colorizes the console logging output
           winston.format.splat(),
           winston.format.timestamp({
-            format: 'YY-MM-DD HH:mm:ss.SSS'
+            format: 'YY-MM-DD HH:mm:ss.SSS' // logs with the year to the console
           }),
-          consoleLoggingFormat
+          consoleLoggingFormat // logs with the custom console format
         ),
-        level: args.loglevel || 'info'
+        level: args.loglevel || 'info' // logs to the console with the arg loglevel or info if it is not given
       }),
       new winston.transports.File({
-        level: 'debug',
-        filename: './.log/rcn-frontserver.log'
+        level: 'debug', // logs with debug level to the active file
+        filename: './.log/rcn-frontserver.log', // the filename of the current file,
+        options: {flags: 'w'} // overwrites the file on restart
       }),
       new DailyRotateFile({
-        level: 'verbose',
-        filename: './.log/frontserver-%DATE%.log',
-        datePattern: 'YYYY-MM-DD',
-        zippedArchive: true,
-        maxSize: '32m',
-        maxFiles: '30d'
+        level: 'verbose', // log verbose in the rotating logvile
+        filename: './.log/frontserver-%DATE%.log', // the pattern of the filename
+        datePattern: 'YYYY-MM-DD', // the pattern of %DATE%
+        zippedArchive: true, // indicates that old logfiles should get zipped
+        maxSize: '32m', // the maximum filesize
+        maxFiles: '30d' // the maximum files to keep
       })
     ]
   }),
@@ -59,7 +62,18 @@ const https = require('https'),
     key: fs.readFileSync('.ssh/key.pem'),   // the key-file
     cert: fs.readFileSync('.ssh/cert.pem')  // the certificate-file
   },
-  port = args.port || 80; // The port of the web server.
+  port = args.port || 80,
+  routes = config.routes || {
+    ".html": {
+      "path": "./res/html",
+      "mime": "text/html"
+    },
+    ".js": {
+      "path": "./res/scripts",
+      "mime": "text/javascript"
+    }
+  }
+  ; // The port of the web server.
 
 // --- functional declaration part ---
 
@@ -110,12 +124,12 @@ function getExtension(filename) {
 }
 
 /**
- * Returns a string that depends on the path.
+ * Returns a string that depends on the path. It gets the data from the routes variable.
  * @param  {String} path Normally a file-name. Depending on the extension, an other root-path is choosen.
  * @return {String}      An Array containing (Either the files content or an error message) and the mime-type.
  */
 function getResponse(path) {
-  logger.verbose({'msg':'calculationg response', 'path': path});
+  logger.verbose({'msg':'calculating response', 'path': path});
   try {
     // get the file extension
     let extension = getExtension(path);
@@ -126,37 +140,45 @@ function getResponse(path) {
       if (extension == ".css") return [fs.readFileSync("." + path), "text/css"];
       else return [fs.readFileSync("." + path), "text/javascript"];
     }
+    let route = routes[extension];
+    if (!route) return ["Not Allowed", "text/plain"];
+    let rf = fs.readFileSync;
+    if (extension == ".html") return [formatHtml(rf(route["path"]+path)), route["mime"]];
+    return [rf(route["path"]+path), route["mime"]];
     // test the extension for differend file types.
-    switch (extension) {
-      case '.html':
-      case '.htm':
-        return [formatHtml(fs.readFileSync("./res/html/" + path)), "text/html"];
-      case '.css':
-        return [fs.readFileSync("./res/css/"+path), "text/css"];
-      case '.js':
-        return [fs.readFileSync("./res/scripts/"+path), "text/javascript"];
-      case '.json':
-        return [fs.readFileSync("./res/data/"+path), "text/plain"];
-      // return some images
-      case '.ico':
-        return [fs.readFileSync("./res/img/"+path), "image/x-icon"]
-      case '.jpg':
-        return [fs.readFileSync("./res/img/"+path), "image/jpeg"];
-      case '.png':
-        return [fs.readFileSync("./res/img/"+path), "image/png"];
-      // return some videos
-      case '.mp4':
-        return [fs.readFileSync("./res/vid/"+path), "video/mpeg"];
-      // default return
-      default:
-        // if the extension is not in those above, the access is not allowed.
-        logger.verbose({'msg': 'Illegal request', 'path': path})
-        return ["Not Allowed", "text/plain"];
-    }
+    logger.verbose({'msg': 'Error', 'path': path})
+    return ["Error with url", "text/plain"];
   } catch (error) {
     logger.error(error);
     return "Error";
   }
+}
+
+/**
+ * Creates a css DOM element with href as source
+ * @param  {Object} document A html DOM
+ * @param  {String} href      the source of the css file
+ * @return {Object}          the Link Element
+ */
+function createLinkElement(document, href) {
+  let link = document.createElement('link');
+  link.setAttribute("rel", "stylesheet");
+  link.setAttribute("type", "text/css");
+  link.setAttribute("href", href);
+  return link;
+}
+
+/**
+ * Creates a javascript Script DOM element with src as source
+ * @param  {Object} document A html DOM
+ * @param  {String} src      the source of the javascript file
+ * @return {Object}          the Script Element
+ */
+function createScriptLinkElement(document, src) {
+  let script = document.createElement("script");
+  script.setAttribute("type", "text/javascript");
+  script.setAttribute("src", src);
+  return script;
 }
 
 /**
@@ -170,19 +192,10 @@ function formatHtml(htmlstring) {
     let dom = new JSDOM(htmlstring);  // creates a dom from the html string
     let document = dom.window.document;
     let head = document.getElementsByTagName('head')[0]; // gets the documents head
-    let css = document.createElement('link'); // create a link for the css embeding
-    css.setAttribute("rel", "stylesheet");
-    css.setAttribute("type", "text/css");
-    css.setAttribute("href", defaultCss);
-    head.prepend(css); // prepend the link to the head
-    let js = document.createElement('script'); // create a script for js embedding
-    js.setAttribute("type", "text/javascript");
-    js.setAttribute("src", defaultJs);
-    head.prepend(js); // prepend the script to the head
-    let jquery = document.createElement('script'); // create a script for js embedding
-    jquery.setAttribute("type", "text/javascript");
-    jquery.setAttribute("src", "/glob/jquery.js");
-    head.prepend(jquery); // prepend the script to the head
+    head.prepend(createLinkElement(document, defaultCss)); // prepend the default css to the head
+    head.prepend(createScriptLinkElement(document, defaultJs)); // prepend the default script to the head
+    head.prepend(createScriptLinkElement(document, "/glob/jquery.js")); // prepend the JQuery to the head
+    head.prepend(createScriptLinkElement(document, "/glob/vue.js")); // prepend the Vue to the head
     return dom.serialize(); // return a string of the document
   } catch(error) {
     logger.error(error);

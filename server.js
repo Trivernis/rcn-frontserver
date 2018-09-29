@@ -6,6 +6,7 @@ const https = require('https'),
   perfy = require('perfy'),
   winston = require('winston'),
   DailyRotateFile = require('winston-daily-rotate-file'),
+  path = require('path'),
 // args
   args = require('args-parser')(process.argv), // create an args parser
 // ressources
@@ -62,18 +63,18 @@ const https = require('https'),
     key: fs.readFileSync('.ssh/key.pem'),   // the key-file
     cert: fs.readFileSync('.ssh/cert.pem')  // the certificate-file
   },
-  port = args.port || 80,
+  port = args.port || 443, // the port the server is running on. It's the https standard
   routes = config.routes || {
     ".html": {
-      "path": "./res/html",
+      "path": "./res/html", // standard route to the html files
       "mime": "text/html"
     },
     ".js": {
-      "path": "./res/scripts",
+      "path": "./res/scripts", // standard route to the script files
       "mime": "text/javascript"
     }
-  }
-  ; // The port of the web server.
+  },
+  mounts = config.mounts; // mounts are more important than routes.
 
 // --- functional declaration part ---
 
@@ -88,13 +89,13 @@ function main() {
 
       perfy.start('response-calculation');  // caluclate the response time
       let url = urlparse.parse(req.url); // parse the url
-      let path = url.pathname;  // set path to the urls pathname
-      logger.debug({msg: 'Got URL by using url package','url': url, 'path': path});
+      let uri = url.pathname;  // set uri to the urls uriame
+      logger.debug({"msg": 'Got URL by using url package','url': url, 'path': uri});
 
-      let [response, mime] = getResponse(path); // get a response for the url path
+      let [response, mime] = getResponse(uri); // get a response for the url path
       logger.debug({'response-length': response.length, 'mime-type': mime});
 
-      res.writeHead(200, {"Content-Type": mime}); // write the mime as head
+      res.writeHead(200, {"Content-Type": mime || "text/plain"}); // write the mime as head
       res.end(response);  // write the response
       let execTime = perfy.end('response-calculation').fullMilliseconds; // get the execution time
       logger.debug("Response-Time: " + execTime + " ms for " + req.url, "debug"); // log the execution time
@@ -103,6 +104,7 @@ function main() {
   } catch (error) {
     logger.error(error);
     logger.info("Shutting Down...");
+    winston.end();
     return false;
   }
 }
@@ -113,6 +115,7 @@ function main() {
  * @return {String}          A string that represents the file-extension.
  */
 function getExtension(filename) {
+  if (!filename) return null;
   try {
     let exts = filename.match(/\.[a-z]+/g); // get the extension by using regex
     if (exts) return exts[exts.length - 1]; // return the found extension
@@ -124,34 +127,53 @@ function getExtension(filename) {
 }
 
 /**
- * Returns a string that depends on the path. It gets the data from the routes variable.
- * @param  {String} path Normally a file-name. Depending on the extension, an other root-path is choosen.
+ * Returns a string that depends on the uri It gets the data from the routes variable.
+ * @param  {String} uriNormally a file-name. Depending on the extension, an other root-uriis choosen.
  * @return {String}      An Array containing (Either the files content or an error message) and the mime-type.
  */
-function getResponse(path) {
-  logger.verbose({'msg':'calculating response', 'path': path});
+function getResponse(uri) {
+  if (!uri || uri == "/") uri = "/index.html"; // uri redirects to the index.html if it is not set or if it is root
+  logger.verbose({'msg':'calculating response', 'path': uri});
   try {
     // get the file extension
-    let extension = getExtension(path);
-    // returns the home-html file if the path is root.
-    if (path == "/") return [fs.readFileSync("./glob/home.html"), "text/html"];
-    // returns the global script or css if the extension is css or js and the root-path is glob.
-    if (path.includes("/glob") && extension  == ".css" || getExtension(path) == ".js") {
-      if (extension == ".css") return [fs.readFileSync("." + path), "text/css"];
-      else return [fs.readFileSync("." + path), "text/javascript"];
+    let extension = getExtension(uri);
+    // returns the global script or css if the extension is css or js and the root-uriis glob.
+    if (uri.includes("/glob") && extension  == ".css" || extension == ".js") {
+      if (extension == ".css") return [fs.readFileSync("." + uri), "text/css"];
+      else return [fs.readFileSync("." + uri), "text/javascript"];
     }
-    let route = routes[extension];
-    if (!route) return ["Not Allowed", "text/plain"];
-    let rf = fs.readFileSync;
-    if (extension == ".html") return [formatHtml(rf(route["path"]+path)), route["mime"]];
-    return [rf(route["path"]+path), route["mime"]];
+    let mount = getMount(uri); // get mount for uri it will be uses as path later instead of route
+    let route = routes[extension]; // get the route from the extension json
+    if (!route) return ["Not Allowed", "text/plain"]; // return not allowed if no route was found
+    let rf = fs.readFileSync; // shorten filesync
+    if (extension == ".html") return [formatHtml(rf(mount || path.join(route["path"]+uri))), route["mime"]]; // format if html and return
+    return [rf(mount || route["path"]+uri), route["mime"]]; // return without formatting if it's not an html file. (htm files won't be manipulated)
     // test the extension for differend file types.
-    logger.verbose({'msg': 'Error', 'path': path})
-    return ["Error with url", "text/plain"];
+    logger.verbose({'msg': 'Error', 'path': uri})
+    return ["Error with url", "text/plain"]; // return an error if above has not returned
   } catch (error) {
     logger.error(error);
-    return "Error";
+    return ["Error", "text/plain"];
   }
+}
+
+/**
+ * gets all mounted paths and returns the modified uri.
+ * @param  {String} uri The uri
+ * @return {String}     The uri that points to the mounted path
+ */
+function getMount(uri) {
+  if (mounts){ // if mounts are set
+    for (var mount of mounts){ // for each set mount
+      if (mount.mount && mount.path) { // if the mount has the mount parameter and the path parameter
+        let regEx = RegExp(mount.mount); // create a regex from the mount
+        if (uri.match(regEx)) { // if there is a match
+          return uri.replace(regEx, mount.path); // returnthe modified uri
+        }
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -187,7 +209,7 @@ function createScriptLinkElement(document, src) {
  * @return {String}            A html-string that represents a document.
  */
 function formatHtml(htmlstring) {
-  logger.verbose({'msg': 'Formatting HTML', 'htmlstring': htmlstring});
+  logger.debug({'msg': 'Formatting HTML', 'htmlstring': htmlstring});
   try {
     let dom = new JSDOM(htmlstring);  // creates a dom from the html string
     let document = dom.window.document;

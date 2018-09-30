@@ -1,6 +1,6 @@
-rcn-frontserver
+rcn-frontserver <img src="https://raw.githubusercontent.com/Trivernis/rcn-frontserver/develop/res/img/RCN-Logo.png" height="100px" width="auto"></img>
 ====
-<img src="https://raw.githubusercontent.com/Trivernis/rcn-frontserver/develop/res/img/RCN-Logo.png" height="100px" width="auto"></img>
+
 About
 ----
 This is the front-web-server of the Raspberry pi Communication network.

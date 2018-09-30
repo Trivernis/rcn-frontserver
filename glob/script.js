@@ -19,7 +19,9 @@ function bindModelData(model) {
   $.get(model.attr('src'), function(data){
     $('*[model='+model.attr('name')+']').each(function() {
       let elem = $(this);
-      elem.html(getDataByPath(JSON.parse(data), elem.attr('datapath')));
+      let data = getDataByPath(JSON.parse(data), elem.attr('datapath'));
+      this.setAttribute(":data", data);
+      //elem.html();
     })
   });
 }

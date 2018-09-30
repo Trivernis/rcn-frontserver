@@ -138,16 +138,19 @@ function getResponse(uri) {
     // get the file extension
     let extension = getExtension(uri);
     // returns the global script or css if the extension is css or js and the root-uriis glob.
-    if (uri.includes("/glob") && extension  == ".css" || extension == ".js") {
+    if (uri.includes("/glob") && (extension  == ".css" || extension == ".js")) {
+      logger.verbose("Using global uri");
       if (extension == ".css") return [fs.readFileSync("." + uri), "text/css"];
       else return [fs.readFileSync("." + uri), "text/javascript"];
     }
     let mount = getMount(uri); // get mount for uri it will be uses as path later instead of route
+    logger.verbose("Mount for uri is "+ mount)
     let route = routes[extension]; // get the route from the extension json
+    logger.verbose("Found route: "+JSON.stringify(route))
     if (!route) return ["Not Allowed", "text/plain"]; // return not allowed if no route was found
     let rf = fs.readFileSync; // shorten filesync
     if (extension == ".html") return [formatHtml(rf(mount || path.join(route["path"]+uri))), route["mime"]]; // format if html and return
-    return [rf(mount || route["path"]+uri), route["mime"]]; // return without formatting if it's not an html file. (htm files won't be manipulated)
+    return [rf(mount || path.join(route["path"],uri)), route["mime"]]; // return without formatting if it's not an html file. (htm files won't be manipulated)
     // test the extension for differend file types.
     logger.verbose({'msg': 'Error', 'path': uri})
     return ["Error with url", "text/plain"]; // return an error if above has not returned

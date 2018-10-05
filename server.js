@@ -2,18 +2,18 @@
 const https = require('https'),
   fs = require('fs'),
   urlparse = require('url'),
-  { JSDOM } = require('jsdom'),
   perfy = require('perfy'),
   winston = require('winston'),
   DailyRotateFile = require('winston-daily-rotate-file'),
   path = require('path'),
+// own modules
+  utils = require("./lib/utils"),
+  prepro = require("./lib/preprocessor"),
 // args
   args = require('args-parser')(process.argv), // create an args parser
-// ressources
-  defaultCss = "/glob/style.css", // the default style that is embedded in every html
-  defaultJs = "/glob/script.js", // the default script that is embedded in every html
 // config file
-  config = JSON.parse(fs.readFileSync("config.json")),
+  config = JSON.parse(fs.readFileSync("./config/server.json")),
+
 // logging config using winston
   fileLoggingFormat = winston.format.printf(info => {
     return `${info.timestamp} ${info.level.toUpperCase()}: ${JSON.stringify(info.message)}`; // the logging format for files
@@ -74,7 +74,8 @@ const https = require('https'),
       "mime": "text/javascript"
     }
   },
-  mounts = config.mounts; // mounts are more important than routes.
+  mounts = config.mounts, // mounts are more important than routes.
+  cache = {}; // cache stores filenames for cached processed files
 
 // --- functional declaration part ---
 
@@ -104,25 +105,9 @@ function main() {
   } catch (error) {
     logger.error(error);
     logger.info("Shutting Down...");
+    caching.cleanup();
     winston.end();
     return false;
-  }
-}
-
-/**
- * returns the extension of a file for the given filename.
- * @param  {String} filename The name of the file.
- * @return {String}          A string that represents the file-extension.
- */
-function getExtension(filename) {
-  if (!filename) return null;
-  try {
-    let exts = filename.match(/\.[a-z]+/g); // get the extension by using regex
-    if (exts) return exts[exts.length - 1]; // return the found extension
-    else return null; // return null if no extension could be found
-  } catch (error) {
-    logger.warn(error);
-    return null;
   }
 }
 
@@ -134,25 +119,24 @@ function getExtension(filename) {
 function getResponse(uri) {
   if (!uri || uri == "/") uri = "/index.html"; // uri redirects to the index.html if it is not set or if it is root
   logger.verbose({'msg':'calculating response', 'path': uri});
+  let gp = prepro.getProcessed;
   try {
     // get the file extension
-    let extension = getExtension(uri);
+    let extension = utils.getExtension(uri);
     // returns the global script or css if the extension is css or js and the root-uriis glob.
-    if (uri.includes("/glob") && (extension  == ".css" || extension == ".js")) {
+    if (uri.includes("/glob") && (extension  == ".sass" || extension == ".js")) {
       logger.verbose("Using global uri");
-      if (extension == ".css") return [fs.readFileSync("." + uri), "text/css"];
-      else return [fs.readFileSync("." + uri), "text/javascript"];
+      if (extension == ".sass") return [gp("." + uri), "text/css"];
+      else return [gp("." + uri), "text/javascript"];
     }
     let mount = getMount(uri); // get mount for uri it will be uses as path later instead of route
-    logger.verbose("Mount for uri is "+ mount)
+    logger.verbose("Mount for uri is "+ mount);
     let route = routes[extension]; // get the route from the extension json
-    logger.verbose("Found route: "+JSON.stringify(route))
+    logger.verbose("Found route: "+JSON.stringify(route));
     if (!route) return ["Not Allowed", "text/plain"]; // return not allowed if no route was found
-    let rf = fs.readFileSync; // shorten filesync
-    if (extension == ".html") return [formatHtml(rf(mount || path.join(route["path"]+uri))), route["mime"]]; // format if html and return
-    return [rf(mount || path.join(route["path"],uri)), route["mime"]]; // return without formatting if it's not an html file. (htm files won't be manipulated)
+    return [gp(mount || path.join(route["path"],uri)), route["mime"]]; // get processed output (done by preprocessor)
     // test the extension for differend file types.
-    logger.verbose({'msg': 'Error', 'path': uri})
+    logger.verbose({'msg': 'Error', 'path': uri});
     return ["Error with url", "text/plain"]; // return an error if above has not returned
   } catch (error) {
     logger.error(error);
@@ -177,55 +161,6 @@ function getMount(uri) {
     }
   }
   return false;
-}
-
-/**
- * Creates a css DOM element with href as source
- * @param  {Object} document A html DOM
- * @param  {String} href      the source of the css file
- * @return {Object}          the Link Element
- */
-function createLinkElement(document, href) {
-  let link = document.createElement('link');
-  link.setAttribute("rel", "stylesheet");
-  link.setAttribute("type", "text/css");
-  link.setAttribute("href", href);
-  return link;
-}
-
-/**
- * Creates a javascript Script DOM element with src as source
- * @param  {Object} document A html DOM
- * @param  {String} src      the source of the javascript file
- * @return {Object}          the Script Element
- */
-function createScriptLinkElement(document, src) {
-  let script = document.createElement("script");
-  script.setAttribute("type", "text/javascript");
-  script.setAttribute("src", src);
-  return script;
-}
-
-/**
- * Formats the html string by adding a link to the standard css and to the standard javascript file.
- * @param  {String} htmlstring A string read from an html file or a html document string itself.
- * @return {String}            A html-string that represents a document.
- */
-function formatHtml(htmlstring) {
-  logger.debug({'msg': 'Formatting HTML', 'htmlstring': htmlstring});
-  try {
-    let dom = new JSDOM(htmlstring);  // creates a dom from the html string
-    let document = dom.window.document;
-    let head = document.getElementsByTagName('head')[0]; // gets the documents head
-    head.prepend(createLinkElement(document, defaultCss)); // prepend the default css to the head
-    head.prepend(createScriptLinkElement(document, defaultJs)); // prepend the default script to the head
-    head.prepend(createScriptLinkElement(document, "/glob/jquery.js")); // prepend the JQuery to the head
-    head.prepend(createScriptLinkElement(document, "/glob/vue.js")); // prepend the Vue to the head
-    return dom.serialize(); // return a string of the document
-  } catch(error) {
-    logger.error(error);
-    return htmlstring;
-  }
 }
 
 // Executing the main function

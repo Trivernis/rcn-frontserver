@@ -35,6 +35,10 @@
     ".ttf": {
       "path": "./res/fonts/",
       "mime": "font/opentype"
+    },
+    ".sass" :{
+      "path": "./res/sass",
+      "mime": "style/css"
     }
   }
 }

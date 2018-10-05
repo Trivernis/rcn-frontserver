@@ -14,6 +14,7 @@ Modules
 -   jsdom
 -   winston-daily-rotate-file
 -   args-parser
+-   node-sass
 
 **Embedded in the html-file**
 -   JQuery

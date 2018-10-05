@@ -29,4 +29,5 @@ node_modules
 # Custom additions
 .ssh
 .log
+.cache
 package-lock.json

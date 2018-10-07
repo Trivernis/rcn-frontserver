@@ -32,12 +32,14 @@ This web server uses folders for every type of file (depending on the file's end
     }
   ]
 }
+
+You can embed sass files as link elements in html-pages. The sass files will be preprocessed to css before send to clients. The result will also be cached and the sass file will be watched for changes. If changes occur, the file will be preprocessed anew on the next request to the file. If not, the cached file will be send. HTML-files will also be cached because they are also manipulated by the preprocessor. All cached files are watched for changes. I.e. if changes to the file are detected the caching function isCached returns false.
 ```
 
 Roadmap
 ----
 **Done**
-
+-   SASS-Files and caching of preprocessed files
 **ToDo**
 -   Mounting of folders or files on other locations (by using the config.json)
 -   a package.json because it seems to be important nowadays

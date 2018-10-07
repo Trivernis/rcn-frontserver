@@ -85,6 +85,7 @@ const https = require('https'),
  */
 function main() {
   try {
+    prepro.setLogger(logger);
     https.createServer(options, function(req, res) {
       logger.verbose({'msg': 'Received request', 'method': req.method, 'url': req.url});
 

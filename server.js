@@ -136,9 +136,6 @@ function getResponse(uri) {
     logger.verbose("Found route: "+JSON.stringify(route));
     if (!route) return ["Not Allowed", "text/plain"]; // return not allowed if no route was found
     return [gp(mount || path.join(route["path"],uri)), route["mime"]]; // get processed output (done by preprocessor)
-    // test the extension for differend file types.
-    logger.verbose({'msg': 'Error', 'path': uri});
-    return ["Error with url", "text/plain"]; // return an error if above has not returned
   } catch (error) {
     logger.error(error);
     return ["Error", "text/plain"];

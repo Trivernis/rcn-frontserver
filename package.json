@@ -1,0 +1,14 @@
+﻿{
+  "license": "GPL-v3",
+  "dependencies": [
+    "args-parser",
+    "https",
+    "jquery",
+    "jsdom",
+    "node-sass",
+    "perfy",
+    "vuejs",
+    "winston-daily-rotate-file",
+    "winston"
+  ]
+}

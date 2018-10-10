@@ -7,7 +7,7 @@ function bindData(){
   let mods = $('model');
   mods.each(function(){
     let model = $(this);
-    if (model.attr('refresh-interval') != undefined) {
+    if (model.attr('refresh-interval') !== undefined) {
       bindModelData(model);
       setInterval(()=> { bindModelData(model) }, model.attr('refresh-interval'));
     }
@@ -16,11 +16,11 @@ function bindData(){
 }
 
 function bindModelData(model) {
-  $.get(model.attr('src'), function(data){
+  $.get(model.attr('src'), function(data) {
     $('*[model='+model.attr('name')+']').each(function() {
       let elem = $(this);
-      let data = getDataByPath(JSON.parse(data), elem.attr('datapath'));
-      this.setAttribute(":data", data);
+      let dat = getDataByPath(JSON.parse(data), elem.attr('datapath'));
+      this.setAttribute(":data", dat);
       //elem.html();
     })
   });
@@ -28,7 +28,7 @@ function bindModelData(model) {
 
 /**
  * Returns the data of an array by accessing the given path-string
- * @param  {JSON-Object} array Contains the data.
+ * @param  {Object} array Contains the data.
  * @param  {String} path  The path to the wanted data.
  * @return {Object}       Returns anything that the path points to.
  */

@@ -74,8 +74,7 @@ const https = require('https'),
             "mime": "text/javascript"
         }
     },
-    mounts = config.mounts, // mounts are more important than routes.
-    cache = {}; // cache stores filenames for cached processed files
+    mounts = config.mounts; // mounts are more important than routes.
 
 // --- functional declaration part ---
 

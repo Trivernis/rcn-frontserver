@@ -1,13 +1,13 @@
 function getFormattedData(dataArray) {
   let arrData = ["0,100"];
-  for (d of dataArray) {
+  for (let d of dataArray) {
     arrData.push(d[0]+","+(100-d[1]));
   }
   arrData.push("100,100");
   return arrData.join(" ");
 }
 
-var vueApp = new Vue({
+new Vue({
   el: '#app',
   data: {
     temperatureData: [1,2,3,4],

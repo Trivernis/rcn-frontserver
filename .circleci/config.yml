@@ -21,7 +21,7 @@ jobs: # a collection of steps
       - run: # run tests
           name: test
           command: node server.js --test --port=8880
-          bakground: true
+          background: true
       - run:
           name: request
           shell: /bin/sh

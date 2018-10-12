@@ -20,11 +20,14 @@ jobs: # a collection of steps
             - ./node_modules
       - run: # run tests
           name: Start server in background
-          command: node server.js --test --port=8880
+          command: node server.js --port=8880
           background: true
       - run:
-          name: Http Request to server
+          name: Valid HTTP Request to server
           command: wget --retry-connrefused --waitretry=1 --timeout=15 -t 10 http://localhost:8880
+      - run:
+          name: Bad HTTP Request to server
+          command: wget  --retry-connrefused --waitretry=1 --timeout=15 -t 10 http://localhost:8880/invalid
       - run:
           name: Run server without request
           command: node server.js --test --port=8888

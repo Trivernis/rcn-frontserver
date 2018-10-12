@@ -7,12 +7,12 @@ jobs: # a collection of steps
     steps: # a collection of executable commands
       - checkout # special step to check out source code to working directory
       - run:
-          name: update-npm
+          name: Update npm
           command: 'sudo npm install -g npm@latest'
       - restore_cache: # special step to restore the dependency cache
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: install-npm-wee
+          name: Install dependencies
           command: npm install
       - save_cache: # special step to save the dependency cache
           key: dependency-cache-{{ checksum "package.json" }}
@@ -20,7 +20,7 @@ jobs: # a collection of steps
             - ./node_modules
       - run: # run tests
           name: Start server in background
-          command: node server.js --port=8880
+          command: node server.js --port=8880 --loglevel=debug
           background: true
       - run:
           name: Valid HTTP Request to server
@@ -30,13 +30,5 @@ jobs: # a collection of steps
           command: 'wget  --retry-connrefused --waitretry=1 --timeout=15 -t 10 http://localhost:8880/invalid || :'
       - run:
           name: Run server without request
-          command: node server.js --test --port=8888
-      - store_artifacts: # special step to save test results as as artifact
-          path: test-results.xml
-          prefix: tests
-      - store_artifacts:
-          path: coverage
-          prefix: coverage
-      - store_test_results: # special step to upload test results for display in Test Summary
-          path: test-results.xml
+          command: node server.js --test --port=8888 --loglevel=debug
       # See https://circleci.com/docs/2.0/deployment-integrations/ for deploy examples

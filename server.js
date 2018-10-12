@@ -91,20 +91,18 @@ function main() {
             let uri = url.pathname;  // set uri to the urls uriame
             logger.debug({"msg": 'Got URL by using url package', 'url': url, 'path': uri});
 
-            let [response, mime] = getResponse(uri); // get a response for the url path
-            logger.debug({'response-length': response.length, 'mime-type': mime});
-
-            res.writeHead(200, {"Content-Type": mime || "text/plain"}); // write the mime as head
+            let resArray = getResponse(uri); // get a response for the url path
+            let response = resArray[0] || "", // the response
+              mime = resArray[1] || "text/plain", // the mime-type
+              statuscode = resArray[2] || 200; // the status code. 200 if not explicitly set
+            logger.debug({'response-length': response.length, 'mime-type': mime, 'code': statuscode});
+            res.writeHead(statuscode, {"Content-Type": mime}); // write the mime as head
             res.end(response);  // write the response
             let execTime = perfy.end('response-calculation').fullMilliseconds; // get the execution time
             logger.debug("Response-Time: " + execTime + " ms for " + req.url, "debug"); // log the execution time
-
         }).listen(port); // server listens on port specified in the parameter
     } catch (error) {
-        logger.error(error);
-        logger.info("Shutting Down...");
-        prepro.cleanup();
-        winston.end();
+        logger.error(error.message);
         process.exit(1);
     }
 }
@@ -112,15 +110,15 @@ function main() {
 /**
  * Returns a string that depends on the uri It gets the data from the routes variable.
  * @param uri
- * @return {string[]}      An Array containing (Either the files content or an error message) and the mime-type.
+ * @return {string[]}  An Array containing the files content, the mime type and sometimes the statuscode (if it is not 200)
  */
 function getResponse(uri) {
-    if (!uri || uri === "/") uri = "/index.html"; // uri redirects to the index.html if it is not set or if it is root
+    let matches = uri.match(/(\/$|\/\w+$)/g); // matches when the url has no file extension or ends in a slash (/)
+    if (matches) uri += '/index.html'; // append index.html if there are matches
     logger.verbose({'msg': 'calculating response', 'path': uri});
-    let gp = prepro.getProcessed;
+    let gp = prepro.getProcessed; // shorten the function name
     try {
-        // get the file extension
-        let extension = utils.getExtension(uri);
+        let extension = utils.getExtension(uri); // get the urls file-extension
         // returns the global script or css if the extension is css or js and the root-uriis glob.
         if (uri.includes("/glob") && (extension === ".sass" || extension === ".js")) {
             logger.verbose("Using global uri");
@@ -131,12 +129,16 @@ function getResponse(uri) {
         logger.verbose("Mount for uri is " + mount);
         let route = routes[extension]; // get the route from the extension json
         logger.verbose("Found route: " + JSON.stringify(route));
-        if (!route) return ["Not Allowed", "text/plain"]; // return not allowed if no route was found
+
+        if (!route) {
+            logger.warn(`No route found for ${uri}`);
+            return [gp(config.errors['403']), "text/html", 403]; // return not allowed if no route was found
+        }
         return [gp(mount || path.join(route["path"], uri)), route["mime"]]; // get processed output (done by preprocessor)
     } catch (error) {
-        logger.error(error);
+        logger.warn(error.message);
         if (args.test) process.exit(1);
-        return ["Error", "text/plain"];
+        return [gp(config.errors['404']), "text/html", 404];
     }
 }
 
@@ -159,8 +161,18 @@ function getMount(uri) {
     return false;
 }
 
+/**
+ * A cleanup-function that should only be called on process exit
+ */
+function cleanup() {
+  logger.info('Cleanup...');
+  prepro.cleanup(); // cleanup the preprocessor
+  logger.end();     // let the logger finish all operations
+}
+
 // Executing the main function
 if (typeof require !== 'undefined' && require.main === module) {
+    utils.Cleanup(cleanup); // set the cleanup function
     logger.exceptions.handle(
         new winston.transports.File({
             filename: './.log/frontserver-exceptions.log'
@@ -174,7 +186,7 @@ if (typeof require !== 'undefined' && require.main === module) {
     } else protocoll = require('http'); // if no certs could be found start the server as http-server
     logger.info("Starting up... ");  // log the current date so that the logfile is better to read.
     if (args.test) {
-      setTimeout(() => process.exit(0), 30000);
+      setTimeout(() => process.exit(0), 10000); // if in testing mode, exit after 10 seconds
     }
     main();
 }

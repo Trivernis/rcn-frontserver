@@ -1,0 +1,44 @@
+{
+  "routes": {
+    ".html": {
+      "path": "./res/html/",
+      "mime": "text/html"
+    },
+    ".htm": {
+      "path": "./res/html/",
+      "mime": "text/html"
+    },
+    ".js": {
+      "path": "./res/scripts/",
+      "mime": "text/javascript"
+    },
+    ".css": {
+      "path": "./res/css/",
+      "mime": "text/css"
+    },
+    ".json": {
+      "path": "./res/data/",
+      "mime": "text/plain"
+    },
+    ".ico": {
+      "path": "./res/img/",
+      "mime": "image/x-icon"
+    },
+    ".jpg": {
+      "path": "./res/img/",
+      "mime": "image/jpeg"
+    },
+    ".png": {
+      "path": "./res/img/",
+      "mime": "image/png"
+    },
+    ".ttf": {
+      "path": "./res/fonts/",
+      "mime": "font/opentype"
+    },
+    ".sass" :{
+      "path": "./res/sass",
+      "mime": "style/css"
+    }
+  }
+}

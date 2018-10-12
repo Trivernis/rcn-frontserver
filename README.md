@@ -1,4 +1,4 @@
-rcn-frontserver <img src="https://raw.githubusercontent.com/Trivernis/rcn-frontserver/develop/res/img/RCN-Logo.png" height="100px" width="auto"></img>
+rcn-frontserver <img src="https://raw.githubusercontent.com/Trivernis/rcn-frontserver/develop/res/img/RCN-Logo.png" height="100px" width="auto"></img> [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![CircleCI](https://circleci.com/gh/Trivernis/rcn-frontserver.svg?style=shield)](https://circleci.com/gh/Trivernis/rcn-frontserver) [![CodeFactor](https://www.codefactor.io/repository/github/trivernis/rcn-frontserver/badge)](https://www.codefactor.io/repository/github/trivernis/rcn-frontserver)
 ====
 This is the front-end web-server of the Raspberry Communication Network *(that is still in development)*.
 

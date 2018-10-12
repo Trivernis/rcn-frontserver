@@ -25,6 +25,9 @@ jobs: # a collection of steps
       - run:
           name: Http Request to server
           command: wget --retry-connrefused --waitretry=1 --timeout=15 -t 10 http://localhost:8880
+      - run:
+          name: Run server without request
+          command: node server.js --test --port=8888
       - store_artifacts: # special step to save test results as as artifact
           path: test-results.xml
           prefix: tests

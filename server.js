@@ -1,5 +1,5 @@
 // requirement
-var protocoll = require('https');
+let protocoll = require('https'); // if there are no certificates protocoll will be set to require(http)
 const fs = require('fs'),
     urlparse = require('url'),
     perfy = require('perfy'),
@@ -153,12 +153,12 @@ function getMount(uri) {
             if (mount.mount && mount.path) { // if the mount has the mount parameter and the path parameter
                 let regEx = RegExp(mount.mount); // create a regex from the mount
                 if (uri.match(regEx)) { // if there is a match
-                    return uri.replace(regEx, mount.path); // returnthe modified uri
+                    logger.debug(regEx.toString() + " returns a result");
+                    return uri.replace(regEx, mount.path); // return the modified uri
                 }
             }
         }
     }
-    return false;
 }
 
 /**
@@ -170,9 +170,27 @@ function cleanup() {
   logger.end();     // let the logger finish all operations
 }
 
+/**
+ * Offers help when the function is called via the --help flag
+ */
+function help() {
+    console.log("\nUsage: server.js [options]\n\n" +
+        "Options:\n" +
+        "   -h, --help  show this help message and exit\n" +
+        "   --port      define the port for the server to run on\n" +
+        "   --loglevel  define at which level the console should output\n" +
+        "   --test      start the server and exit after 10 seconds\n");
+    process.exit(0);
+}
+
 // Executing the main function
 if (typeof require !== 'undefined' && require.main === module) {
+    // do arg specific operations
+    if (args.help || args.h) help();
+    if (args.test) setTimeout(() => process.exit(0), 10000); // if in testing mode, exit after 10 seconds
+
     utils.Cleanup(cleanup); // set the cleanup function
+
     logger.exceptions.handle(
         new winston.transports.File({
             filename: './.log/frontserver-exceptions.log'
@@ -184,9 +202,7 @@ if (typeof require !== 'undefined' && require.main === module) {
           cert: fs.readFileSync('.ssh/cert.pem')  // the certificate-file
       };
     } else protocoll = require('http'); // if no certs could be found start the server as http-server
+
     logger.info("Starting up... ");  // log the current date so that the logfile is better to read.
-    if (args.test) {
-      setTimeout(() => process.exit(0), 10000); // if in testing mode, exit after 10 seconds
-    }
-    main();
+    main(); // execute the main function
 }

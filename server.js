@@ -1,6 +1,6 @@
 // requirement
-const https = require('https'),
-    fs = require('fs'),
+var protocoll = require('https');
+const fs = require('fs'),
     urlparse = require('url'),
     perfy = require('perfy'),
     winston = require('winston'),
@@ -59,10 +59,6 @@ const https = require('https'),
         ]
     }),
 // serveroptions
-    options = {
-        key: fs.readFileSync('.ssh/key.pem'),   // the key-file
-        cert: fs.readFileSync('.ssh/cert.pem')  // the certificate-file
-    },
     port = args.port || 443, // the port the server is running on. It's the https standard
     routes = config.routes || {
         ".html": {
@@ -75,6 +71,8 @@ const https = require('https'),
         }
     },
     mounts = config.mounts; // mounts are more important than routes.
+// these will store the certificate options later
+var options = {};
 
 // --- functional declaration part ---
 
@@ -85,7 +83,7 @@ const https = require('https'),
 function main() {
     try {
         prepro.setLogger(logger);
-        https.createServer(options, function (req, res) {
+        protocoll.createServer(options, function (req, res) {
             logger.verbose({'msg': 'Received request', 'method': req.method, 'url': req.url});
 
             perfy.start('response-calculation');  // caluclate the response time
@@ -168,7 +166,15 @@ if (typeof require !== 'undefined' && require.main === module) {
             filename: './.log/frontserver-exceptions.log'
         })
     );
+    if (fs.existsSync('.ssh/key.pem') && fs.existsSync('.ssh/cert.pem')) { // check if the required cert files exists
+      options = {
+          key: fs.readFileSync('.ssh/key.pem'),   // the key-file
+          cert: fs.readFileSync('.ssh/cert.pem')  // the certificate-file
+      };
+    } else protocoll = require('http'); // if no certs could be found start the server as http-server
     logger.info("Starting up... ");  // log the current date so that the logfile is better to read.
-    if (args.test) setTimeout(() => process.exit(0), 30000);
+    if (args.test) {
+      setTimeout(() => process.exit(0), 30000);
+    }
     main();
 }

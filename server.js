@@ -9,8 +9,6 @@ const fs = require('fs'),
 // own modules
     utils = require("./lib/utils"),
     prepro = require("./lib/preprocessor"),
-// cleanup
-    clean = utils.Cleanup(cleanup),
 // args
     args = require('args-parser')(process.argv), // create an args parser
 // config file
@@ -163,6 +161,9 @@ function getMount(uri) {
     return false;
 }
 
+/**
+ * A cleanup-function that should only be called on process exit
+ */
 function cleanup() {
   logger.info('Cleanup...');
   prepro.cleanup(); // cleanup the preprocessor
@@ -171,6 +172,7 @@ function cleanup() {
 
 // Executing the main function
 if (typeof require !== 'undefined' && require.main === module) {
+    utils.Cleanup(cleanup); // set the cleanup function
     logger.exceptions.handle(
         new winston.transports.File({
             filename: './.log/frontserver-exceptions.log'

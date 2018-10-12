@@ -28,7 +28,7 @@ jobs: # a collection of steps
           command: |
             wget --retry-connrefused --waitretry=1 --readtimeout=20 --timeout=15 -t 10 http://localhost:8880
             :
- |      - run: # run coverage report
+      - run: # run coverage report
           name: code-coverage
           command: './node_modules/.bin/nyc report --reporter=text-lcov'
       - store_artifacts: # special step to save test results as as artifact

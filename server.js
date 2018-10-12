@@ -107,7 +107,7 @@ function main() {
         logger.info("Shutting Down...");
         prepro.cleanup();
         winston.end();
-        return false;
+        process.exit(1);
     }
 }
 
@@ -137,6 +137,7 @@ function getResponse(uri) {
         return [gp(mount || path.join(route["path"], uri)), route["mime"]]; // get processed output (done by preprocessor)
     } catch (error) {
         logger.error(error);
+        if (args.test) process.exit(1);
         return ["Error", "text/plain"];
     }
 }
@@ -168,5 +169,6 @@ if (typeof require !== 'undefined' && require.main === module) {
         })
     );
     logger.info("Starting up... ");  // log the current date so that the logfile is better to read.
+    if (args.test) setTimeout(() => process.exit(0), 30000);
     main();
 }

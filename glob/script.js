@@ -40,6 +40,24 @@ function getDataByPath(array, path) {
   return data;
 }
 
+/**
+ * Shows/Hides the sidebar action-menu
+ */
+function toggleActionMenu() {
+  let state = $('.mainview').attr("state");
+  if (state === "retracted") {
+    $('.mainview').attr("state", "fullsize");
+  } else {
+    $('.mainview').attr("state", "retracted");
+  }
+}
+
+function navigate(view, title) {
+    $('.content').load(view);
+    let sideTitle = title || view.replace(/\.htm/, '');
+    $('.navigationBar .title').html("<span>" + sideTitle + "</span>");
+}
+
 // -- Events --
 // Define what happens onLoad
 $(document).ready(function(){

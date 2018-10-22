@@ -52,10 +52,25 @@ function toggleActionMenu() {
   }
 }
 
+/**
+ * Navigates inside the app
+ * @param view the targeted view
+ * @param title the title of the targtet that is displayed
+ */
 function navigate(view, title) {
+    if (view !== 'index.htm') window.location.hash = view;
+    else window.location.hash = "";
     $('.content').load(view);
     let sideTitle = title || view.replace(/\.htm/, '');
-    $('.navigationBar .title').html("<span>" + sideTitle + "</span>");
+    setTitle(sideTitle);
+}
+
+/**
+ * Sets the title that is displayed for the view
+ * @param title
+ */
+function setTitle(title) {
+    $('.navigationBar .title').html("<span>" + title + "</span>");
 }
 
 // -- Events --

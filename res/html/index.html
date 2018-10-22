@@ -3,7 +3,6 @@
 		<title> Landing 1 </title>
 	</head>
 	<body>
-	<div class="accentBar"></div>
 	<div class="app">
 		<div class="actionList">
 			<ul>
@@ -28,7 +27,7 @@
 			</div>
 			<div class="content">
 				<script type="text/javascript">
-					navigate('index.htm', 'Home');
+					navigate(window.location.hash.replace('#', '') || 'index.htm', window.location.hash || 'Home');
 				</script>
 			</div>
 		</div>

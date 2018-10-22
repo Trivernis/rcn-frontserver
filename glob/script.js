@@ -73,6 +73,53 @@ function setTitle(title) {
     $('.navigationBar .title').html("<span>" + title + "</span>");
 }
 
+/**
+ * Draws a graph in a canvas element
+ * @param element
+ * @param data
+ * @param dimensions
+ * TODO: Draw background grid and x-values and control it via dimensions (rename it to options)
+ */
+function drawGraph(element, data, dimensions) {
+    let ctx = element.getContext('2d');
+    let canvWidth = element.width;
+    let canvHeight = element.height;
+    let xData = [];
+    let yData = [];
+    if (!dimensions) dimensions = {};
+
+    ctx.strokeStyle = $(element).css('color');
+
+    for (let dt of data) {
+        xData.push(dt[0]);
+        yData.push(dt[1]);
+    }
+    let xMax = dimensions.xMax || Math.max.apply(Math, xData);
+    let xMin = dimensions.xMin || Math.min.apply(Math, xData);
+    let yMax = dimensions.yMax || Math.max.apply(Math, yData);
+    let yMin = dimensions.yMin || Math.min.apply(Math, yData);
+
+    let xStep = canvWidth / (xMax - xMin);
+    let yStep = canvHeight / (yMax - yMin);
+
+    console.log(`yMax: ${yMax}; yMin: ${yMin}; ${JSON.stringify(dimensions)}`);
+
+    let x = 0;
+    let y = canvHeight;
+    if (data.length > 0) {
+        x = data[0][0];
+        y = data[0][1];
+    }
+    for (let dt of data) {
+        ctx.moveTo(x, y);
+        x = dt[0] * xStep;
+        y = canvHeight - ((dt[1] - yMin) * yStep);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        console.log(x, y);
+    }
+}
+
 // -- Events --
 // Define what happens onLoad
 $(document).ready(function(){

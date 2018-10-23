@@ -1,3 +1,5 @@
+// -- Variables --
+let intervals = {};
 // -- Functions --
 
 /**
@@ -58,6 +60,7 @@ function toggleActionMenu() {
  * @param title the title of the targtet that is displayed
  */
 function navigate(view, title) {
+    destroyIntervals(window.location.hash);
     if (view !== 'index.htm') window.location.hash = view; // set the hash if the url is not the index.htm
     else window.location.hash = ""; // reset the hash if the hash url is the index.htm
     $('.content').load(view); // load the view into the content class elements
@@ -201,6 +204,30 @@ function showTooltip(text, position, keep) {
 function hideTooltip() {
     let tooltip = document.querySelector('#tooltip'); // select the element with the id tooltip
     if (tooltip) tooltip.remove(); // delete the element if it does exist
+}
+
+/**
+ * Creates an interval and assigns it to an owner for keeping track
+ * @param func
+ * @param sec
+ * @param owner
+ * @returns {Object} the interval
+ */
+function registerInterval(func, sec, owner) {
+    if (!owner) owner = window.location.hash; // set the owner to the hash if it is not defined
+    if (!intervals[owner]) intervals[owner] = []; // if the entry doesn't exist init it as empty list
+    let interval = setInterval(func, sec); // set the interval
+    intervals[owner].push(interval); // assign the interval to the list
+    return interval; // return the interval
+}
+
+/**
+ * Destroys all intervals of an owner
+ * @param owner
+ */
+function destroyIntervals(owner) {
+    if (!intervals[owner]) return;
+    intervals[owner].forEach((intv) => clearInterval(intv));
 }
 
 // -- Events --

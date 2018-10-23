@@ -6,4 +6,4 @@ function draw() {
 }
 
 draw();
-let refreshInterval = setInterval(draw, 1000);
+registerInterval(draw, 1000);

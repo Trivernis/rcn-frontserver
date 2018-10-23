@@ -145,9 +145,24 @@
       left: 0
       overflow: auto
     .graph
-      color: $cOnPrimary
+      color: $cPrimaryVariant
+      box-shadow: inset 0 1px 5px $cOnSurfaceShadow
+      border-radius: $sPadding
+      outline-color: $cOnPrimary
+      background: darken($cPrimary, 4%)
       position: absolute
       left: $sPadding
       top: 20%
       height: calc(80% - 12.5px)
       width: calc(100% - 25px)
+      canvas, .labels
+        position: absolute
+        top: 0
+        left: 0
+        height: 100%
+        width: 100%
+        span
+          padding: 2px
+          font-weight: bold
+          color: $cOnPrimary
+          opacity: 0.75

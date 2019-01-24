@@ -3,7 +3,7 @@
   "dependencies": {
     "args-parser": "^1.1.0",
     "jquery": "^3.3.1",
-    "jsdom": "^12.2.0",
+    "jsdom": "13.2.0",
     "node-sass": "^4.9.3",
     "perfy": "^1.1.5",
     "systeminformation": "^3.45.9",

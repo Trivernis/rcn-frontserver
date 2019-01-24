@@ -1,4 +1,6 @@
 @import "./style/colors.sass"
+@import "./style/layout.sass"
+@import "./style/elements.sass"
 
 @font-face
   font-family: ubuntuL
@@ -12,54 +14,7 @@
   font-family: ubuntuMono
   src: url(/UbuntuMono-R.ttf)
 
-// tagnames
+
+
 body
   font-family: ubuntuL
-  background: $main-color
-  color: $highlight-color
-  text-align: center
-  font-size: 13pt
-
-a
-  color: $link-color
-
-a:hover
-  color: lighten($link-color, 10%)
-
-a:visited
-  color: darken($link-color, 10%)
-
-h1, h2, h3, h4, h5
-  line-height: 1.5em
-// tag-like classes
-
-.title
-  font-size: 30pt
-
-.content
-  padding: 0px 10%
-  margin: auto
-  line-height: 1.5em
-
-.footer
-  position: absolute
-  width: 100%
-  bottom: 0px
-  left: 0px
-  background: $bar-color
-
-.header
-  padding: 1px 1px
-  position: static
-  width: 100%
-  top: 0px
-  left: 0px
-  background: $bar-color
-
-.spacer
-  height: 50px
-
-// attribute-like classes
-
-.justify
-  text-align: justify

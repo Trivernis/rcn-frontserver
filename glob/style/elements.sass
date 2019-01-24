@@ -1,0 +1,175 @@
+@import layout
+@import colors
+
+.app
+  background: $cBackground
+  color: $cOnBackground
+  user-select: none
+  ::-webkit-scrollbar
+    width: 12px
+    height: 12px
+  ::-webkit-scrollbar-thumb
+    background: $cSecondary
+  ::-webkit-scrollbar-track
+    background: lighten($cPrimary, 10%)
+
+.mainview
+  transition-duration: 1s
+  box-shadow: 0 5px 5px $cOnSurfaceShadow
+  background: $cBackground
+
+.mainview[state=retracted]
+  width: 80%
+
+.accentBar
+  @extend .bar
+  background: $cSecondary
+  height: 10px
+
+.navigationBar
+  @extend .bar
+  background: $cPrimary
+  color: $cOnPrimary
+  min-height: 35px
+  box-shadow: 0 5px 5px $cOnSurfaceShadow
+  position: relative
+  z-index: 999
+  text-align: center
+  .menu
+    height: 2em
+    width: 2em
+    padding: calc(0.5em + 5px) $sPadding 0.5em
+    background: url("/icons/menu.svg") no-repeat center, $cPrimary
+    transition-duration: 0.3s
+    cursor: pointer
+    border-radius: 0
+  .menu:hover
+    background: url("/icons/menu.svg") no-repeat center, darken($cPrimary, 4%)
+  .menu:active
+    background: url("/icons/menu.svg") no-repeat center, lighten($cPrimary, 4%)
+    border-radius: 2em
+  .button
+    background: $cPrimary
+    padding: 1em $sPadding 0
+    height: 2em
+    float: left
+    text-align: center
+    transition-duration: 0.3s
+    cursor: pointer
+    border-bottom: 5px solid $cPrimary
+    span
+      vertical-align: middle
+      display: inline-block
+  .button:hover
+    background: darken($cPrimary, 4%)
+    border-bottom: 5px solid darken($cPrimary, 4%)
+  .button:active
+    background: lighten($cPrimary, 4%)
+    border-bottom: 5px solid lighten($cPrimary, 4%)
+  .current
+    border-bottom: 5px solid $cSurface !important
+  .title
+    padding: 0.5em $sPadding 0.5em
+    font-size: 18pt
+    font-weight: bold
+    text-align: center
+    width: 100%
+
+.actionList
+  background: $cPrimary
+  color: $cOnPrimary
+  width: 20%
+  height: 100%
+  ul
+    list-style: none
+    padding-left: 0
+    li
+      padding: $sPadding
+      width: 100%
+      cursor: pointer
+      transition-duration: 0.3s
+    li:hover
+      background: darken($cPrimary, 4%)
+    li:active
+      background: lighten($cPrimary, 4%)
+
+.panelContainer
+  background: $cSurface
+  color: $cOnSurface
+  .panel
+    transition-duration: 0.3s
+    background: $cPrimary
+    color: $cOnPrimary
+    display: inline-block
+    position: relative
+    min-height: 225px
+    min-width: 225px
+    padding: $sPadding
+    max-width: 100vw
+    max-height: 100vw
+    margin: 25px
+    border-radius: $sPadding
+    box-shadow: 0 5px 5px $cOnSurfaceShadow
+    cursor: pointer
+    text-align: justify
+  .panel.max-width
+    width: calc(100% - 75px)
+  .panel.half-width
+    width: calc(50% - 77.5px)
+  .panel:hover
+    background: darken($cPrimary, 4%)
+  .panel:active
+    background: lighten($cPrimary, 4%)
+    box-shadow: 0 7px 5px $cOnSurfaceShadow
+  .panel
+    .title
+      position: absolute
+      padding: $sPadding
+      text-align: center
+      width: calc(100% - 25px)
+      top: 0
+      left: 0
+      font-size: 16pt
+      font-weight: bold
+    .icon
+      position: absolute
+      padding: $sPadding
+      left: 0
+      top: calc(1em + 12.5px)
+      height: calc(50% - 50px)
+      width: calc(100% - 25px)
+      img
+        height: 100%
+        width: auto
+        margin: 0 calc(50% - 25px)
+    .description
+      position: absolute
+      padding: $sPadding
+      top: 50%
+      height: calc(50% - 37.5px)
+      left: 0
+      overflow: auto
+    .graph
+      position: absolute
+      left: $sPadding
+      top: 20%
+      height: calc(80% - 12.5px)
+      width: calc(100% - 25px)
+
+.graph
+  color: $cPrimaryVariant
+  box-shadow: inset 0 1px 5px $cOnSurfaceShadow
+  border-radius: $sPadding
+  outline-color: $cOnPrimary
+  background: darken($cPrimary, 4%)
+  canvas, .labels
+    position: absolute
+    top: 0
+    left: 0
+    height: 100%
+    width: 100%
+    span
+      padding: 2px
+      font-weight: bold
+      color: $cOnPrimary
+      opacity: 0.75

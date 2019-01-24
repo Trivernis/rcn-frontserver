@@ -83,6 +83,7 @@ var options = {};
 function main() {
     try {
         prepro.setLogger(logger);
+        setInterval(utils.genSystemData, 1000);
         protocoll.createServer(options, function (req, res) {
             logger.verbose({'msg': 'Received request', 'method': req.method, 'url': req.url});
 
